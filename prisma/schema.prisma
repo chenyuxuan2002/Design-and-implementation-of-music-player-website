@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId           Int            @id @default(autoincrement()) @map("user_id")
+  username         String?
+  email            String         @unique
+  registrationDate DateTime?      @map("registration_date")
+  age              Int?
+  gender           String?
+  password         String 
+  userSongs        UserSong[]     // 保留用于表示用户喜欢的歌曲等 
+  playlistItems    PlaylistItem[] // 新增用于管理用户播放列表中的歌曲
+  @@map("users")
+}
+
+model Song {
+  songId         Int            @id @default(autoincrement()) @map("song_id")
+  title          String
+  artist         String?
+  releaseDate    DateTime?      @map("release_date")
+  genre          String?
+  duration       Int?
+  mp3Path        String?        // 用于保存 MP3 文件的路径
+  albumUrl       String?        @db.VarChar(1000)
+  userSongs      UserSong[]     // 与UserSong模型的关联
+  playlistItems  PlaylistItem[] // 与PlaylistItem模型的关联
+  @@map("songs") 
+}
+
+model UserSong {
+  userSongId Int     @id @default(autoincrement()) @map("user_song_id")
+  userId     Int     @map("user_id")
+  songId     Int     @map("song_id")
+  playCount  Int     @default(0) @map("play_count")
+  liked      Boolean @default(false)
+  user       User    @relation(fields: [userId], references: [userId])
+  song       Song    @relation(fields: [songId], references: [songId])
+  @@map("user_songs")
+}
+
+model PlaylistItem {
+  playlistItemId Int       @id @default(autoincrement()) @map("playlist_item_id")
+  userId         Int       @map("user_id")
+  songId         Int       @map("song_id")
+  addedAt        DateTime  @default(now()) // 歌曲被添加到播放列表的时间
+  user           User      @relation(fields: [userId], references: [userId])
+  song           Song      @relation(fields: [songId], references: [songId])
+  @@map("playlist_items")
+}
